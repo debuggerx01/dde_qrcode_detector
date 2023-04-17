@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:zbar_scan_plugin/zbar_scan_plugin.dart' as ZBar;
+import 'package:zbar_scan_plugin/zbar_scan_plugin.dart' as zbar;
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,7 +72,7 @@ enum Status {
 class _MyHomePageState extends State<MyHomePage> {
   Offset currentWindowPos = Offset.zero;
   Status status = Status.standBy;
-  List<ZBar.CodeInfo> codes = [];
+  List<zbar.CodeInfo> codes = [];
 
   @override
   void initState() {
@@ -115,10 +115,10 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
-  static Future<List<ZBar.CodeInfo>> scan(dynamic _) async {
+  static Future<List<zbar.CodeInfo>> scan(dynamic _) async {
     var imagePath = '/tmp/${DateTime.now().toIso8601String()}.png';
     Process.runSync('scrot', [imagePath]);
-    var result = ZBar.scan(imagePath);
+    var result = zbar.scan(imagePath);
     File(imagePath).delete();
     return result;
   }
