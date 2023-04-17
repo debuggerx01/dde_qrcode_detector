@@ -136,7 +136,6 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(),
         backgroundColor: status == Status.standBy
             ? Colors.transparent
             : Colors.black12.withOpacity(
@@ -235,8 +234,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                 onPressed: () {
                                   Clipboard.setData(
                                     ClipboardData(text: code.content),
-                                  );
-                                  exit(0);
+                                  ).then((_) {
+                                    Future.delayed(const Duration(milliseconds: 300), () {
+                                      exit(0);
+                                    });
+                                  });
                                 },
                                 child: const Text(
                                   '复制',
