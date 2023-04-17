@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:dde_qrcode_detector/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -65,6 +66,7 @@ enum Status {
   scan,
   found,
   notFound,
+  finish,
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -85,14 +87,28 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     WindowManager.instance.focus();
     WindowManager.instance.grabKeyboard();
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        status = Status.scan;
-      });
-      compute(scan, null).then((codes) {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (context.mounted) {
         setState(() {
-          codes = codes;
-          status = codes.isEmpty ? Status.notFound : Status.found;
+          status = Status.scan;
+        });
+      }
+      compute(scan, null).then((result) {
+        if (context.mounted) {
+          setState(() {
+            codes = result;
+            status = codes.isEmpty ? Status.notFound : Status.found;
+          });
+        }
+        Future.delayed(const Duration(seconds: 3), () {
+          if (status == Status.notFound) {
+            exit(0);
+          }
+          if (context.mounted) {
+            setState(() {
+              status = Status.finish;
+            });
+          }
         });
       });
     });
@@ -102,118 +118,155 @@ class _MyHomePageState extends State<MyHomePage> {
   static Future<List<ZBar.CodeInfo>> scan(dynamic _) async {
     var imagePath = '/tmp/${DateTime.now().toIso8601String()}.png';
     Process.runSync('scrot', [imagePath]);
-    return ZBar.scan(imagePath);
+    var result = ZBar.scan(imagePath);
+    File(imagePath).delete();
+    return result;
   }
 
   @override
   Widget build(BuildContext context) {
-    late Rect rect;
-    if (pos != null) {
-      rect = Rect.fromPoints(
-        Offset(pos!.bottomLeft.x, pos!.bottomLeft.y),
-        Offset(pos!.topRight.x, pos!.topRight.y),
-      );
-      rect = rect.translate(-currentWindowPos.dx, -currentWindowPos.dy);
-    }
     return GestureDetector(
       onTap: () {
-        if ([Status.found, Status.notFound].contains(status)) {
+        if ([
+          Status.found,
+          Status.notFound,
+          Status.finish,
+        ].contains(status)) {
           exit(0);
         }
       },
       child: Scaffold(
+        appBar: AppBar(),
         backgroundColor: status == Status.standBy
             ? Colors.transparent
             : Colors.black12.withOpacity(
                 status == Status.scan ? 0.4 : 0.2,
               ),
         body: Stack(
+          fit: StackFit.expand,
           children: [
-            if (status == Status.scan)
+            if (![Status.standBy, Status.finish].contains(status))
               Center(
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
                     color: Colors.grey.shade700.withOpacity(0.9),
                   ),
-                  child: RepaintBoundary(
-                    child: Image.asset(
-                      'assets/doubt.gif',
-                      width: 200,
-                      height: 200,
-                    ),
-                  ),
-                ),
-              ),
-            if (status == Status.found)
-              Positioned(
-                left: rect.left - rect.width / 2,
-                top: rect.top - rect.height / 2,
-                child: Container(
-                  width: rect.width * 2,
-                  height: rect.height * 2,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(
-                      max(rect.width, rect.height),
-                    ),
-                    color: Colors.black38.withOpacity(.6),
-                  ),
+                  width: 460,
+                  height: 360,
                   child: Center(
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          '二维码内容：',
-                          style: TextStyle(
-                            fontSize: 28,
-                            color: Colors.white,
+                        RepaintBoundary(
+                          child: Image.asset(
+                            {
+                              Status.scan: 'assets/doubt.gif',
+                              Status.found: 'assets/ok.gif',
+                              Status.notFound: 'assets/no.gif',
+                            }[status]!,
+                            width: 200,
+                            height: 200,
+                            fit: BoxFit.fitHeight,
                           ),
                         ),
-                        AutoSizeText(
-                          content?.text ?? '',
+                        Text(
+                          {
+                            Status.scan: '小浣熊正在努力寻找二维码~',
+                            Status.found: '小浣熊成功找到${codes.length}个二维码！',
+                            Status.notFound: '小浣熊找了一圈，啥也没发现……',
+                          }[status]!,
                           style: const TextStyle(
-                            fontSize: 28,
                             color: Colors.white,
+                            fontSize: 28,
                           ),
-                          minFontSize: 16,
-                          maxFontSize: 46,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            FilledButton(
-                              onPressed: () {
-                                Clipboard.setData(
-                                  ClipboardData(text: content?.text),
-                                );
-                              },
-                              child: const Text(
-                                '复制',
-                                style: TextStyle(fontSize: 28),
-                              ),
-                            ),
-                            FilledButton(
-                              onPressed: () async {
-                                var url = content?.text ?? '';
-                                if (await canLaunchUrlString(url)) {
-                                  launchUrlString(url).then((value) {
-                                    exit(0);
-                                  });
-                                }
-                              },
-                              child: const Text(
-                                '打开',
-                                style: TextStyle(fontSize: 28),
-                              ),
-                            ),
-                          ],
                         ),
                       ],
                     ),
                   ),
                 ),
               ),
+            ...codes.map(
+              (code) {
+                var centerAndSize = getCenterAndSizeOfPoints(code.points);
+                var center = centerAndSize.center - currentWindowPos;
+                var size = max(centerAndSize.size, 300);
+                return Positioned(
+                  left: center.dx - size / 2,
+                  top: center.dy - size / 2,
+                  child: Container(
+                    width: size.toDouble(),
+                    height: size.toDouble(),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(size / 2),
+                      color: Colors.black38.withOpacity(.6),
+                    ),
+                    padding: EdgeInsets.all(size / 6),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Text(
+                            '二维码内容：',
+                            style: TextStyle(
+                              fontSize: 28,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Flexible(
+                            child: AutoSizeText(
+                              code.content.split('').join('\u{200B}'),
+                              style: const TextStyle(
+                                fontSize: 28,
+                                color: Colors.white,
+                              ),
+                              minFontSize: 16,
+                              maxFontSize: 46,
+                            ),
+                          ),
+                          SizedBox(height: size / 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              FilledButton(
+                                onPressed: () {
+                                  Clipboard.setData(
+                                    ClipboardData(text: code.content),
+                                  );
+                                  exit(0);
+                                },
+                                child: const Text(
+                                  '复制',
+                                  style: TextStyle(fontSize: 28),
+                                ),
+                              ),
+                              SizedBox(width: size / 20),
+                              FilledButton(
+                                onPressed: () async {
+                                  var url = code.content;
+                                  if (await canLaunchUrlString(url)) {
+                                    launchUrlString(url).then((value) {
+                                      exit(0);
+                                    });
+                                  }
+                                },
+                                child: const Text(
+                                  '打开',
+                                  style: TextStyle(fontSize: 28),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),

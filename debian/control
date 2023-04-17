@@ -1,0 +1,15 @@
+Source: dde-qrcode-detector
+Section: utils
+Priority: optional
+Maintainer: DebuggerX <dx8913712@163.com>
+Build-Depends:
+ clang,
+ cmake,
+ libgtk-3-dev,
+ ninja-build,
+ libzbar-dev,
+Homepage: https://github.com/debuggerx01/dde_qrcode_detector
+Package: com.debuggerx.dde-qrcode-detector
+Architecture: amd64
+Depends: libzbar0
+Description: 专为 DDE 桌面环境打造的屏幕二维码识别工具，使用 Flutter 构建。

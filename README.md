@@ -1,4 +1,4 @@
-# dde_qrcode_detector
+# DDE二维码识别
 
 A new Flutter project.
 

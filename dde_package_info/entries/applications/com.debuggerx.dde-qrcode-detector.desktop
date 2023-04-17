@@ -1,0 +1,10 @@
+[Desktop Entry]
+Categories=Utility;
+Comment=专为 DDE 桌面环境打造的屏幕二维码识别工具，使用 Flutter 构建。
+Exec=/opt/apps/com.debuggerx.dde-qrcode-detector/files/dde_qrcode_detector
+Icon=dde_qrcode_detector
+Name=DDE Qrcode Detector
+Name[zh_CN]=DDE二维码识别
+Type=Application
+Version=VERSION
+X-Deepin-Vendor=user-custom
