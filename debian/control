@@ -11,5 +11,5 @@ Build-Depends:
 Homepage: https://github.com/debuggerx01/dde_qrcode_detector
 Package: com.debuggerx.dde-qrcode-detector
 Architecture: amd64
-Depends: libzbar0
+Depends: libzbar0, scrot
 Description: 专为 DDE 桌面环境打造的屏幕二维码识别工具，使用 Flutter 构建。
