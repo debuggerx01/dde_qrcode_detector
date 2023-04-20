@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:zbar_scan_plugin/zbar_scan_plugin.dart' as zbar;
@@ -35,7 +36,19 @@ Future main() async {
     await windowManager.focus();
   });
 
-  runApp(const MyApp());
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = 'https://6b0c6212196241fa88df20dfcc495c4a@o644838.ingest.sentry.io/4505045898166272';
+      options.tracesSampleRate = 1.0;
+      options.reportPackages = false;
+      Sentry.configureScope(
+        (scope) => scope.setUser(
+          SentryUser(username: Platform.environment['USER']),
+        ),
+      );
+    },
+    appRunner: () => runApp(const MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -100,6 +113,12 @@ class _MyHomePageState extends State<MyHomePage> {
             status = codes.isEmpty ? Status.notFound : Status.found;
           });
         }
+        Sentry.captureMessage(
+          'Found ${result.length} codes.',
+          withScope: (scope) {
+            SentryUser(username: Platform.environment['USER']);
+          },
+        );
         Future.delayed(const Duration(seconds: 3), () {
           if (status == Status.notFound) {
             exit(0);
@@ -125,6 +144,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.of(context).size.shortestSide < 10) {
+      return const SizedBox.shrink();
+    }
     return GestureDetector(
       onTap: () {
         if ([

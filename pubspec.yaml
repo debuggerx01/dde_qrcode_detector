@@ -42,6 +42,7 @@ dependencies:
   zbar_scan_plugin:
     git:
       url: https://github.com/debuggerx01/zbar_scan_plugin.git
+  sentry_flutter: ^7.4.2
 
 dev_dependencies:
   flutter_test:
