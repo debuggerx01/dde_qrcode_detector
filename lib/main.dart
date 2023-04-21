@@ -59,6 +59,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        fontFamily: 'Noto Sans CJK SC',
       ),
       home: const MyHomePage(),
     );
@@ -144,9 +145,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.of(context).size.shortestSide < 10) {
+    var shortestSide = MediaQuery.of(context).size.shortestSide;
+    if (shortestSide < 10) {
       return const SizedBox.shrink();
     }
+    
+    var scale = shortestSide / 2000;
+    
     return GestureDetector(
       onTap: () {
         if ([
@@ -170,11 +175,11 @@ class _MyHomePageState extends State<MyHomePage> {
               Center(
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(24 * scale),
                     color: Colors.grey.shade700.withOpacity(0.9),
                   ),
-                  width: 460,
-                  height: 360,
+                  width: 460 * scale,
+                  height: 360 * scale,
                   child: Center(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -187,8 +192,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               Status.found: 'assets/ok.gif',
                               Status.notFound: 'assets/no.gif',
                             }[status]!,
-                            width: 200,
-                            height: 200,
+                            width: 200 * scale,
+                            height: 200 * scale,
                             fit: BoxFit.fitHeight,
                           ),
                         ),
@@ -198,9 +203,9 @@ class _MyHomePageState extends State<MyHomePage> {
                             Status.found: '小浣熊成功找到${codes.length}个二维码！',
                             Status.notFound: '小浣熊找了一圈，啥也没发现……',
                           }[status]!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 28,
+                            fontSize: 28 * scale,
                           ),
                         ),
                       ],
@@ -212,7 +217,7 @@ class _MyHomePageState extends State<MyHomePage> {
               (code) {
                 var centerAndSize = getCenterAndSizeOfPoints(code.points);
                 var center = centerAndSize.center - currentWindowPos;
-                var size = max(centerAndSize.size, 300);
+                var size = max(centerAndSize.size, 300) * scale;
                 return Positioned(
                   left: center.dx - size / 2,
                   top: center.dy - size / 2,
@@ -229,10 +234,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const Text(
+                          Text(
                             '二维码内容：',
                             style: TextStyle(
-                              fontSize: 28,
+                              fontSize: 28 * scale,
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
                             ),
@@ -240,11 +245,11 @@ class _MyHomePageState extends State<MyHomePage> {
                           Flexible(
                             child: AutoSizeText(
                               code.content.split('').join('\u{200B}'),
-                              style: const TextStyle(
-                                fontSize: 28,
+                              style: TextStyle(
+                                fontSize: 28 * scale,
                                 color: Colors.white,
                               ),
-                              minFontSize: 16,
+                              minFontSize: 1,
                               maxFontSize: 46,
                             ),
                           ),
@@ -252,34 +257,42 @@ class _MyHomePageState extends State<MyHomePage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              FilledButton(
-                                onPressed: () {
-                                  Clipboard.setData(
-                                    ClipboardData(text: code.content),
-                                  ).then((_) {
-                                    Future.delayed(const Duration(milliseconds: 300), () {
-                                      exit(0);
-                                    });
-                                  });
-                                },
-                                child: const Text(
-                                  '复制',
-                                  style: TextStyle(fontSize: 28),
+                              Flexible(
+                                child: FittedBox(
+                                  child: FilledButton(
+                                    onPressed: () {
+                                      Clipboard.setData(
+                                        ClipboardData(text: code.content),
+                                      ).then((_) {
+                                        Future.delayed(const Duration(milliseconds: 300), () {
+                                          exit(0);
+                                        });
+                                      });
+                                    },
+                                    child: Text(
+                                      '复制',
+                                      style: TextStyle(fontSize: 28 * scale),
+                                    ),
+                                  ),
                                 ),
                               ),
                               SizedBox(width: size / 20),
-                              FilledButton(
-                                onPressed: () async {
-                                  var url = code.content;
-                                  if (await canLaunchUrlString(url)) {
-                                    launchUrlString(url).then((value) {
-                                      exit(0);
-                                    });
-                                  }
-                                },
-                                child: const Text(
-                                  '打开',
-                                  style: TextStyle(fontSize: 28),
+                              Flexible(
+                                child: FittedBox(
+                                  child: FilledButton(
+                                    onPressed: () async {
+                                      var url = code.content;
+                                      if (await canLaunchUrlString(url)) {
+                                        launchUrlString(url).then((value) {
+                                          exit(0);
+                                        });
+                                      }
+                                    },
+                                    child: Text(
+                                      '打开',
+                                      style: TextStyle(fontSize: 28 * scale),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
