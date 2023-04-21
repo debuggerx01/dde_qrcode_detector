@@ -42,9 +42,7 @@ Future main() async {
       options.tracesSampleRate = 1.0;
       options.reportPackages = false;
       Sentry.configureScope(
-        (scope) => scope.setUser(
-          SentryUser(username: Platform.environment['USER']),
-        ),
+        setSentryScope,
       );
     },
     appRunner: () => runApp(const MyApp()),
@@ -115,9 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
         Sentry.captureMessage(
           'Found ${result.length} codes.',
-          withScope: (scope) {
-            SentryUser(username: Platform.environment['USER']);
-          },
+          withScope: setSentryScope,
         );
         Future.delayed(const Duration(seconds: 3), () {
           if (status == Status.notFound) {
