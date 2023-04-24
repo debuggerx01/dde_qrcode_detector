@@ -1,16 +1,12 @@
 # DDE二维码识别
 
-A new Flutter project.
+专为 DDE 桌面环境打造的屏幕二维码识别工具，使用 Flutter 构建。
 
-## Getting Started
+说明：
+1. 由于是基于Zbar识别，可能存在部分二维码识别不到的问题
+2. 由于是基于Zbar识别，某些条形码也会被识别到(这不是bug而是feature😂)
+3. 目前不支持Wayland，问题太多了……
 
-This project is a starting point for a Flutter application.
+虽说是为 DDE 开发的，不过简单测试了下，其他桌面环境大概率也能用，毕竟功能太简单了
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+> 小技巧：可以绑定为快捷键触发，命令是 /opt/apps/com.debuggerx.dde-qrcode-detector/files/dde_qrcode_detector
